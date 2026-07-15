@@ -45,6 +45,23 @@ const webhookRoutes = require('./src/routes/openapi/webhooks');
 app.use('/openapi/v1', openRfqRoutes);
 app.use('/openapi/v1', webhookRoutes);
 
+// --------------- Home ---------------
+app.get('/', (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>RFQ Tool</title>
+<style>body{font-family:-apple-system,sans-serif;max-width:600px;margin:60px auto;padding:20px;color:#333}
+a{color:#1989fa;text-decoration:none}h1{font-size:24px}.card{background:#f7f8fa;border-radius:8px;padding:16px;margin:12px 0}
+</style></head>
+<body>
+<h1>🚀 RFQ Tool — 图片转询价单</h1>
+<p>服务运行中</p>
+<div class="card"><strong>内部 API</strong><br><a href="/api/v1/rfqs">/api/v1/rfqs</a> · <a href="/api/v1/suppliers">/api/v1/suppliers</a></div>
+<div class="card"><strong>开放 API</strong><br><a href="/openapi/v1/docs">Swagger 文档</a> · <a href="/openapi/v1/docs.json">OpenAPI JSON</a></div>
+<div class="card"><strong>其他</strong><br><a href="/health">健康检查</a></div>
+</body></html>`);
+});
+
 // --------------- Health check ---------------
 app.get('/health', (req, res) => {
   res.json({ success: true, message: 'RFQ Tool API is running.', timestamp: new Date().toISOString() });
