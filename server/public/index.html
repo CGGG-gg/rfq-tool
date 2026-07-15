@@ -5,208 +5,284 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>图片转RFQ</title>
 <style>
-:root{--blue:#1989fa;--green:#07c160;--gray:#999;--bg:#f5f5f5}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,sans-serif;background:#fff;color:#333;font-size:14px;min-height:100vh}
-.container{max-width:420px;margin:0 auto;padding:16px}
-h1{font-size:20px;text-align:center;padding:20px 0;color:#333}
-.step{font-size:13px;color:var(--gray);text-align:center;margin-bottom:12px}
-.upload-zone{border:2px dashed #ddd;border-radius:12px;padding:60px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px}
-.upload-zone:hover,.upload-zone.drag{border-color:var(--blue);background:#f0f7ff}
-.upload-zone .icon{font-size:48px;display:block;margin-bottom:12px}
-.upload-zone .hint{color:var(--gray);font-size:13px;margin-top:8px}
-.preview-img{width:100%;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.1);margin-bottom:16px}
-.status{text-align:center;padding:20px;color:var(--gray)}
-.status .spinner{display:inline-block;width:24px;height:24px;border:3px solid #e0e0e0;border-top:3px solid var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:8px}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:15px;color:#1a1a1a;background:#f2f3f5;
+  min-height:100vh;display:flex;justify-content:center;
+}
+.phone{
+  width:100%;max-width:420px;min-height:100vh;
+  background:#fff;position:relative;overflow:hidden;
+  box-shadow:0 0 40px rgba(0,0,0,.08);
+}
+
+/* ── Status bar ── */
+.bar{height:44px;background:#1989fa;display:flex;align-items:center;justify-content:center}
+.bar .title{color:#fff;font-size:17px;font-weight:600}
+
+/* ── Content ── */
+.content{padding:20px 16px 32px}
+
+/* ── Step indicator ── */
+.steps{display:flex;justify-content:center;gap:12px;margin-bottom:24px}
+.step{display:flex;align-items:center;gap:6px;font-size:12px;color:#bbb}
+.step .num{width:20px;height:20px;border-radius:50%;background:#e5e5e5;color:#999;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1}
+.step.done .num{background:#07c160;color:#fff}
+.step.active .num{background:#1989fa;color:#fff}
+.step.active{color:#333;font-weight:500}
+
+/* ── Card ── */
+.card{background:#fff;border-radius:12px;padding:20px;margin-bottom:16px}
+.card2{background:#f7f8fa;border-radius:12px;padding:20px;margin-bottom:16px}
+
+/* ── Upload zone ── */
+.dropzone{
+  border:2px dashed #d9d9d9;border-radius:14px;
+  padding:48px 24px;text-align:center;cursor:pointer;
+  transition:all .2s;background:#fafbfc;
+}
+.dropzone:hover{border-color:#1989fa;background:#f0f5ff}
+.dropzone .dz-icon{font-size:44px;margin-bottom:14px;display:block;line-height:1}
+.dropzone .dz-text{font-size:15px;font-weight:600;color:#333}
+.dropzone .dz-hint{font-size:12px;color:#999;margin-top:6px}
+
+/* ── Preview image ── */
+.preview-wrap{position:relative;margin-bottom:16px}
+.preview-img{width:100%;border-radius:10px;display:block}
+.preview-mask{position:absolute;inset:0;border-radius:10px;background:rgba(0,0,0,.03);pointer-events:none}
+.preview-actions{display:flex;gap:10px;margin-top:12px}
+.btn{flex:1;height:46px;border-radius:10px;border:none;font-size:15px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn:active{transform:scale(.97)}
+.btn-outline{background:#fff;color:#666;border:1px solid #ddd}
+.btn-primary{background:#1989fa;color:#fff}
+.btn-primary:disabled{background:#a0cfff}
+
+/* ── Loading ── */
+.loading-block{text-align:center;padding:30px 0}
+.spinner{width:36px;height:36px;border:3px solid #e8e8e8;border-top-color:#1989fa;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.result-card{background:#f9fafb;border-radius:10px;padding:16px;margin-bottom:12px}
-.result-card .name{font-size:15px;font-weight:600}
-.result-card .row{display:flex;gap:16px;margin-top:6px;font-size:13px;color:#666}
-.result-card input{flex:1;border:1px solid #ddd;border-radius:6px;padding:6px 8px;font-size:13px;margin-top:6px}
-.btn{display:block;width:100%;border:none;border-radius:8px;padding:14px;font-size:16px;font-weight:600;cursor:pointer;text-align:center;margin-bottom:10px}
-.btn-blue{background:var(--blue);color:#fff}.btn-blue:active{opacity:.8}
-.btn-green{background:var(--green);color:#fff}.btn-green:active{opacity:.8}
-.btn-white{background:#fff;color:var(--blue);border:1px solid var(--blue)}
-.btn:disabled{opacity:.5;pointer-events:none}
-.source-tag{font-size:11px;color:var(--gray);text-align:center;margin:8px 0}
-.error{color:#ee0a24;text-align:center;padding:10px;font-size:13px}
+.loading-text{font-size:15px;color:#333}
+.loading-sub{font-size:12px;color:#999;margin-top:4px}
+
+/* ── Result ── */
+.result-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.result-label{font-size:16px;font-weight:700}
+.result-source{font-size:11px;color:#07c160;background:#e8ffe8;padding:3px 8px;border-radius:10px}
+
+.item-card{background:#f7f8fa;border-radius:10px;padding:14px;margin-bottom:10px}
+.item-row{display:flex;gap:8px;margin-top:8px}
+.inp{width:100%;height:42px;border:1px solid #e0e0e0;border-radius:8px;padding:0 10px;font-size:14px;background:#fff;color:#333;transition:border .15s}
+.inp:focus{outline:none;border-color:#1989fa}
+.inp.name{font-weight:600;font-size:15px}
+.inp.qty{width:90px}.inp.unit{width:70px}.inp.price{flex:1}
+
+/* ── Download buttons ── */
+.dl-section{margin-top:20px}
+.dl-btn{width:100%;height:50px;border-radius:12px;border:none;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:10px;transition:all .15s}
+.dl-btn:active{transform:scale(.97)}
+.dl-excel{background:#07c160;color:#fff}
+.dl-pdf{background:#fff;color:#1989fa;border:1px solid #1989fa}
+.dl-reset{background:none;color:#999;font-size:14px;font-weight:400;height:40px}
+
+/* ── Error ── */
+.error-msg{text-align:center;padding:24px;color:#ee0a24}
+.error-msg .err-icon{font-size:32px;margin-bottom:8px;display:block}
+
+/* ── footer ── */
+.footer{text-align:center;padding:16px;color:#ccc;font-size:11px}
+
 .hidden{display:none!important}
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>📷 图片转 RFQ</h1>
-  <p class="step">上传产品规格图片 → AI 自动识别提取 → 生成询价单</p>
+<div class="phone">
 
-  <!-- Step 1: Upload -->
-  <div id="upload-area">
-    <label class="upload-zone" for="file-input">
-      <span class="icon">📷</span>
-      <strong>点击选择图片</strong>
-      <div class="hint">支持 JPG / PNG / WebP，最大 10MB</div>
-    </label>
-    <input type="file" id="file-input" accept="image/*" style="display:none">
+<div class="bar"><span class="title">图片转RFQ</span></div>
+
+<div class="content">
+
+<!-- Steps -->
+<div class="steps">
+  <span class="step active" id="step-upload"><span class="num">1</span>上传图片</span>
+  <span class="step" id="step-recognize"><span class="num">2</span>AI识别</span>
+  <span class="step" id="step-result"><span class="num">3</span>下载</span>
+</div>
+
+<!-- Upload area -->
+<div id="section-upload">
+  <div class="dropzone" id="dropzone">
+    <span class="dz-icon">📷</span>
+    <span class="dz-text">点击上传产品图片</span>
+    <span class="dz-hint">JPG / PNG / WebP · 最大 10MB</span>
   </div>
+  <input type="file" id="file-input" accept="image/*" style="display:none">
+</div>
 
-  <div id="preview-area" class="hidden"></div>
+<!-- Preview -->
+<div id="section-preview" class="hidden">
+  <div class="preview-wrap">
+    <img id="preview-img" class="preview-img" src="" alt="">
+    <div class="preview-mask"></div>
+  </div>
+  <div class="preview-actions">
+    <button class="btn btn-outline" id="btn-reselect">重新选择</button>
+    <button class="btn btn-primary" id="btn-recognize">开始识别</button>
+  </div>
+</div>
 
-  <!-- Step 2: Loading -->
-  <div id="loading-area" class="status hidden">
+<!-- Loading -->
+<div id="section-loading" class="card2 hidden">
+  <div class="loading-block">
     <div class="spinner"></div>
-    <div>AI 正在分析图片...</div>
-    <div style="font-size:12px;color:var(--gray);margin-top:4px">DeepSeek + Kimi 并行识别</div>
+    <div class="loading-text">AI 正在分析图片...</div>
+    <div class="loading-sub">DeepSeek + Kimi 并行处理</div>
   </div>
+</div>
 
-  <!-- Step 3: Result -->
-  <div id="result-area" class="hidden">
-    <div style="font-size:15px;font-weight:600;margin-bottom:12px">识别结果（可修改）</div>
-    <div id="items-list"></div>
-    <div class="source-tag" id="source-info"></div>
-    <button class="btn btn-blue" onclick="downloadExcel()">📥 下载 Excel</button>
-    <button class="btn btn-white" onclick="downloadPDF()">📥 下载 PDF</button>
-    <button class="btn btn-white" onclick="resetAll()">🔄 重新上传</button>
+<!-- Result -->
+<div id="section-result" class="hidden">
+  <div class="result-head">
+    <span class="result-label">识别结果</span>
+    <span class="result-source" id="source-tag"></span>
   </div>
+  <div id="items-container"></div>
+  <div class="dl-section">
+    <button class="dl-btn dl-excel" id="btn-excel">📥 下载 Excel 询价单</button>
+    <button class="dl-btn dl-pdf" id="btn-pdf">📥 下载 PDF 询价单</button>
+    <button class="dl-btn dl-reset" id="btn-reset">重新上传</button>
+  </div>
+</div>
 
-  <!-- Error -->
-  <div id="error-area" class="error hidden"></div>
+<!-- Error -->
+<div id="section-error" class="error-msg hidden">
+  <span class="err-icon">😞</span>
+  <span id="error-text"></span>
+</div>
+
+<div class="footer">识别结果由 AI 生成，请核对后使用</div>
+</div>
+
 </div>
 
 <script>
-let currentRfqId = null;
-let currentItems = [];
+const DZ = document.getElementById('dropzone');
+const FI = document.getElementById('file-input');
+const secUpload = document.getElementById('section-upload');
+const secPreview = document.getElementById('section-preview');
+const secLoading = document.getElementById('section-loading');
+const secResult = document.getElementById('section-result');
+const secError = document.getElementById('section-error');
+const stepUp = document.getElementById('step-upload');
+const stepRec = document.getElementById('step-recognize');
+const stepRes = document.getElementById('step-result');
 
-const fileInput = document.getElementById('file-input');
-fileInput.addEventListener('change', handleFile);
+let rfqId = null, items = [];
+let selectedFile = null;
 
-const uploadZone = document.querySelector('.upload-zone');
-uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
-uploadZone.addEventListener('drop', e => {
-  e.preventDefault();
-  uploadZone.classList.remove('drag');
-  const file = e.dataTransfer.files[0];
-  if (file) processImage(file);
-});
+// ── Click / Drag to upload ──
+DZ.addEventListener('click', () => FI.click());
+FI.addEventListener('change', () => { if (FI.files[0]) handleFile(FI.files[0]); });
 
-function handleFile(e) {
-  const file = e.target.files[0];
-  if (file) processImage(file);
+DZ.addEventListener('dragover', e => { e.preventDefault(); DZ.style.borderColor = '#1989fa'; });
+DZ.addEventListener('dragleave', () => { DZ.style.borderColor = '#d9d9d9'; });
+DZ.addEventListener('drop', e => { e.preventDefault(); DZ.style.borderColor = '#d9d9d9'; if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+
+document.getElementById('btn-reselect').addEventListener('click', resetAll);
+document.getElementById('btn-recognize').addEventListener('click', startRecognize);
+document.getElementById('btn-excel').addEventListener('click', downloadExcel);
+document.getElementById('btn-pdf').addEventListener('click', downloadPDF);
+document.getElementById('btn-reset').addEventListener('click', resetAll);
+
+function handleFile(file) {
+  selectedFile = file;
+  document.getElementById('preview-img').src = URL.createObjectURL(file);
+  secUpload.classList.add('hidden');
+  secPreview.classList.remove('hidden');
+  secResult.classList.add('hidden');
+  secError.classList.add('hidden');
+  stepUp.classList.remove('active'); stepUp.classList.add('done');
+  stepRec.classList.add('active'); stepRes.classList.remove('active');
 }
 
-async function processImage(file) {
-  const up = document.getElementById('upload-area');
-  const preview = document.getElementById('preview-area');
-  const loading = document.getElementById('loading-area');
-  const result = document.getElementById('result-area');
-  const error = document.getElementById('error-area');
-
-  up.classList.add('hidden');
-  error.classList.add('hidden');
-  result.classList.add('hidden');
-
-  // Preview
-  preview.innerHTML = `<img src="${URL.createObjectURL(file)}" class="preview-img">`;
-  preview.classList.remove('hidden');
-  loading.classList.remove('hidden');
+async function startRecognize() {
+  if (!selectedFile) return;
+  secPreview.classList.add('hidden');
+  secLoading.classList.remove('hidden');
+  secResult.classList.add('hidden');
+  secError.classList.add('hidden');
 
   try {
-    // 1) Upload image to server
-    const fd = new FormData();
-    fd.append('images', file);
-    const uploadRes = await fetch('/api/v1/uploads', { method:'POST', body:fd }).then(r=>r.json());
-    if (!uploadRes.success) throw new Error(uploadRes.error);
+    // Upload
+    let fd = new FormData(); fd.append('images', selectedFile);
+    let r = await fetch('/api/v1/uploads', { method:'POST', body:fd }).then(r=>r.json());
+    if (!r.success) throw new Error(r.error||'上传失败');
 
-    // 2) Create a temporary RFQ
-    const rfqRes = await fetch('/api/v1/rfqs', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ title: file.name, notes: 'AI 识别结果' })
-    }).then(r=>r.json());
-    if (!rfqRes.success) throw new Error(rfqRes.error);
-    currentRfqId = rfqRes.data.id;
+    // Create RFQ
+    r = await fetch('/api/v1/rfqs', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title:'图片识别 '+new Date().toLocaleString('zh-CN'),notes:''}) }).then(r=>r.json());
+    if (!r.success) throw new Error(r.error||'创建失败');
+    rfqId = r.data.id;
 
-    // 3) Associate image with RFQ
-    const fd2 = new FormData();
-    fd2.append('images', file);
-    await fetch('/api/v1/rfqs/'+currentRfqId+'/images', { method:'POST', body:fd2 });
+    // Associate image
+    fd = new FormData(); fd.append('images', selectedFile);
+    await fetch('/api/v1/rfqs/'+rfqId+'/images', { method:'POST', body:fd });
 
-    // 4) Recognize
-    const recRes = await fetch('/api/v1/rfqs/'+currentRfqId+'/recognize', { method:'POST' }).then(r=>r.json());
-    if (!recRes.success || !recRes.data.items.length) {
-      throw new Error('未能从图片中识别到产品信息，请尝试更清晰的图片');
-    }
+    // Recognize
+    r = await fetch('/api/v1/rfqs/'+rfqId+'/recognize', { method:'POST' }).then(r=>r.json());
+    if (!r.success||!r.data.items.length) throw new Error('未能从图片识别出产品信息，请尝试更清晰的图片');
+    items = r.data.items;
 
-    currentItems = recRes.data.items;
+    // Render
+    document.getElementById('source-tag').textContent = r.data.source||'AI识别';
+    renderItems(items);
+    secLoading.classList.add('hidden');
+    secResult.classList.remove('hidden');
+    stepRec.classList.remove('active'); stepRec.classList.add('done');
+    stepRes.classList.add('active');
 
-    // 5) Show results
-    loading.classList.add('hidden');
-    preview.classList.add('hidden');
-    renderItems(currentItems);
-    document.getElementById('source-info').textContent = '识别引擎: ' + (recRes.data.source || 'AI');
-    result.classList.remove('hidden');
-
-  } catch (e) {
-    loading.classList.add('hidden');
-    preview.classList.add('hidden');
-    error.textContent = '❌ ' + e.message;
-    error.classList.remove('hidden');
-    document.getElementById('upload-area').classList.remove('hidden');
+  } catch(e) {
+    secLoading.classList.add('hidden');
+    document.getElementById('error-text').textContent = e.message;
+    secError.classList.remove('hidden');
+    secUpload.classList.remove('hidden');
   }
 }
 
 function renderItems(items) {
-  const list = document.getElementById('items-list');
-  list.innerHTML = items.map((item, i) => `
-    <div class="result-card">
-      <input value="${esc(item.product_name)}" placeholder="产品名称" onchange="updateItem(${i},'product_name',this.value)">
-      <div class="row">
-        <input value="${item.quantity}" type="number" placeholder="数量" style="width:80px" onchange="updateItem(${i},'quantity',this.value)">
-        <input value="${item.unit}" placeholder="单位" style="width:60px" onchange="updateItem(${i},'unit',this.value)">
-        <input value="${item.target_price||''}" type="number" placeholder="单价" style="flex:1" onchange="updateItem(${i},'target_price',this.value)">
+  document.getElementById('items-container').innerHTML = items.map((item,i) => `
+    <div class="item-card">
+      <input class="inp name" value="${esc(item.product_name)}" placeholder="产品名称" onchange="updateItem(${i},'product_name',this.value)">
+      <div class="item-row">
+        <input class="inp qty" value="${item.quantity}" type="number" placeholder="数量" onchange="updateItem(${i},'quantity',this.value)">
+        <input class="inp unit" value="${item.unit}" placeholder="单位" onchange="updateItem(${i},'unit',this.value)">
+        <input class="inp price" value="${item.target_price||''}" type="number" placeholder="目标单价" onchange="updateItem(${i},'target_price',this.value)">
       </div>
-      <input value="${esc(item.specification||'')}" placeholder="规格型号（可选）" onchange="updateItem(${i},'specification',this.value)">
+      <input class="inp" value="${esc(item.specification||'')}" placeholder="规格型号" onchange="updateItem(${i},'specification',this.value)" style="margin-top:8px">
     </div>
   `).join('');
 }
 
-function updateItem(index, field, value) {
-  currentItems[index][field] = value;
-}
+function updateItem(i, field, val) { items[i][field] = val; }
 
-async function downloadExcel() {
-  await saveItems();
-  window.open('/api/v1/rfqs/'+currentRfqId+'/export/excel');
-}
-
-async function downloadPDF() {
-  await saveItems();
-  window.open('/api/v1/rfqs/'+currentRfqId+'/export/pdf');
-}
+async function downloadExcel() { await saveItems(); window.open('/api/v1/rfqs/'+rfqId+'/export/excel'); }
+async function downloadPDF()   { await saveItems(); window.open('/api/v1/rfqs/'+rfqId+'/export/pdf'); }
 
 async function saveItems() {
-  if (!currentRfqId || !currentItems.length) return;
-  await fetch('/api/v1/rfqs/'+currentRfqId+'/items/bulk', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ items: currentItems.map(i => ({
-      product_name: i.product_name, specification: i.specification||'',
-      quantity: parseFloat(i.quantity)||1, unit: i.unit||'个',
-      target_price: i.target_price?parseFloat(i.target_price):null,
-      delivery_date: i.delivery_date||null, remarks: i.remarks||''
-    })) })
-  });
+  if (!rfqId||!items.length) return;
+  await fetch('/api/v1/rfqs/'+rfqId+'/items/bulk', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({items:items.map(i=>({product_name:i.product_name,specification:i.specification||'',quantity:parseFloat(i.quantity)||1,unit:i.unit||'个',target_price:i.target_price?parseFloat(i.target_price):null,delivery_date:i.delivery_date||null,remarks:i.remarks||''}))}) });
 }
 
 function resetAll() {
-  currentRfqId = null; currentItems = [];
-  document.getElementById('preview-area').classList.add('hidden');
-  document.getElementById('result-area').classList.add('hidden');
-  document.getElementById('error-area').classList.add('hidden');
-  document.getElementById('upload-area').classList.remove('hidden');
-  fileInput.value = '';
+  rfqId=null; items=[]; selectedFile=null;
+  secUpload.classList.remove('hidden');
+  secPreview.classList.add('hidden'); secLoading.classList.add('hidden');
+  secResult.classList.add('hidden'); secError.classList.add('hidden');
+  FI.value=''; stepUp.classList.add('active');stepUp.classList.remove('done');
+  stepRec.classList.remove('active','done'); stepRes.classList.remove('active');
 }
 
-function esc(s) { return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s){return(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 </script>
 </body>
 </html>
