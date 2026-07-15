@@ -1,74 +1,65 @@
 <view class="page">
-  <!-- 标题 -->
-  <view class="header">
-    <text class="title">📷 图片转 RFQ</text>
-    <text class="subtitle">拍照或上传产品规格图 → AI 自动生成询价单</text>
+
+  <!-- 步骤 -->
+  <view class="steps">
+    <view class="step {{error||recognized||recognizing?'done':''}} {{!imagePath&&!recognized?'active':''}}"><text class="num">1</text>上传</view>
+    <view class="step {{recognized?'done':''}} {{recognizing?'active':''}}"><text class="num">2</text>识别</view>
+    <view class="step {{recognized?'active':''}}"><text class="num">3</text>下载</view>
   </view>
 
-  <!-- 上传区 / 图片预览 -->
-  <view class="upload-section">
-    <view wx:if="{{!imagePath}}" class="upload-btn" bindtap="chooseImage">
-      <text class="upload-icon">📷</text>
-      <text class="upload-text">点击拍照或选择图片</text>
-      <text class="upload-hint">支持 JPG / PNG，最大 10MB</text>
-    </view>
+  <!-- 上传 -->
+  <view wx:if="{{!imagePath&&!recognizing&&!recognized&&!error}}" class="upload-zone" bindtap="chooseImage">
+    <text class="upload-icon">📷</text>
+    <text class="upload-text">点击拍照或选择图片</text>
+    <text class="upload-hint">JPG / PNG · 最大 10MB</text>
+  </view>
 
-    <view wx:if="{{imagePath && !recognizing && !recognized}}" class="preview-box">
-      <image src="{{imagePath}}" mode="widthFix" class="preview-img" />
-      <view class="preview-actions">
-        <button class="act-btn act-repick" bindtap="chooseImage">重选</button>
-        <button class="act-btn act-go" bindtap="startRecognize">开始识别</button>
-      </view>
+  <!-- 预览 -->
+  <view wx:if="{{imagePath&&!recognizing&&!recognized}}" class="preview-wrap">
+    <image src="{{imagePath}}" mode="widthFix" class="preview-img"/>
+    <view class="preview-btns">
+      <button class="pbtn pbtn-outline" bindtap="chooseImage">重新选择</button>
+      <button class="pbtn pbtn-primary" bindtap="startRecognize">开始识别</button>
     </view>
   </view>
 
   <!-- 识别中 -->
   <view wx:if="{{recognizing}}" class="loading-box">
     <view class="spinner"></view>
-    <text class="loading-text">AI 正在分析图片...</text>
-    <text class="loading-sub">DeepSeek + Kimi 并行识别</text>
+    <text class="loading-title">AI 分析中...</text>
+    <text class="loading-sub">DeepSeek + Kimi 并行处理</text>
   </view>
 
   <!-- 错误 -->
-  <view wx:if="{{error}}" class="error-box">
-    <text>❌ {{error}}</text>
+  <view wx:if="{{error}}" class="err-box">
+    <text class="err-icon">😞</text>
+    <text>{{error}}</text>
     <button class="retry-btn" bindtap="reset">重新上传</button>
   </view>
 
-  <!-- 识别结果 -->
-  <view wx:if="{{recognized && items.length > 0}}" class="result-section">
-    <view class="result-header">
-      <text class="result-title">识别结果（可修改）</text>
+  <!-- 结果 -->
+  <view wx:if="{{recognized&&items.length>0}}">
+    <view class="result-head">
+      <text class="result-label">识别结果</text>
       <text class="result-source">{{source}}</text>
     </view>
 
     <view wx:for="{{items}}" wx:key="index" class="item-card">
-      <input class="item-input name-input" value="{{item.product_name}}"
-        data-index="{{index}}" data-field="product_name" bindinput="onItemChange"
-        placeholder="产品名称" />
-
+      <input class="inp inp-name" value="{{item.product_name}}" data-index="{{index}}" data-field="product_name" bindinput="onItemChange" placeholder="产品名称"/>
       <view class="item-row">
-        <input class="item-input qty-input" value="{{item.quantity}}" type="digit"
-          data-index="{{index}}" data-field="quantity" bindinput="onItemChange"
-          placeholder="数量" />
-        <input class="item-input unit-input" value="{{item.unit}}"
-          data-index="{{index}}" data-field="unit" bindinput="onItemChange"
-          placeholder="单位" />
-        <input class="item-input price-input" value="{{item.target_price}}" type="digit"
-          data-index="{{index}}" data-field="target_price" bindinput="onItemChange"
-          placeholder="单价(元)" />
+        <input class="inp inp-qty" value="{{item.quantity}}" type="digit" data-index="{{index}}" data-field="quantity" bindinput="onItemChange" placeholder="数量"/>
+        <input class="inp inp-unit" value="{{item.unit}}" data-index="{{index}}" data-field="unit" bindinput="onItemChange" placeholder="单位"/>
+        <input class="inp inp-price" value="{{item.target_price}}" type="digit" data-index="{{index}}" data-field="target_price" bindinput="onItemChange" placeholder="单价"/>
       </view>
-
-      <input class="item-input" value="{{item.specification}}"
-        data-index="{{index}}" data-field="specification" bindinput="onItemChange"
-        placeholder="规格型号（可选）" />
+      <input class="inp" value="{{item.specification}}" data-index="{{index}}" data-field="specification" bindinput="onItemChange" placeholder="规格型号"/>
     </view>
 
-    <!-- 下载按钮 -->
-    <view class="download-section">
-      <button class="dl-btn dl-excel" bindtap="downloadExcel">📥 下载 Excel</button>
-      <button class="dl-btn dl-pdf" bindtap="downloadPDF">📥 下载 PDF</button>
-      <button class="dl-btn dl-retry" bindtap="reset">🔄 重新上传</button>
+    <view class="dl-section">
+      <button class="dl-btn dl-excel" bindtap="downloadExcel">📥 下载 Excel 询价单</button>
+      <button class="dl-btn dl-pdf" bindtap="downloadPDF">📥 下载 PDF 询价单</button>
+      <button class="dl-btn dl-reset" bindtap="reset">重新上传</button>
     </view>
   </view>
+
+  <view class="footer">识别结果由 AI 生成，请核对后使用</view>
 </view>
