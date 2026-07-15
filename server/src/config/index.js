@@ -4,6 +4,9 @@ module.exports = {
   // Server
   port: parseInt(process.env.PORT) || 3000,
 
+  // Proxy for outbound API calls (needed in China for DeepSeek/Kimi)
+  httpProxy: process.env.HTTP_PROXY || '',
+
   // Dev mode: skips WeChat login, auto-creates dev session
   devMode: process.env.DEV_MODE === 'true',
 

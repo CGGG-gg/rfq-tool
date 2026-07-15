@@ -55,20 +55,24 @@ async function recognizeFromImage(imagePath) {
 
   const results = [];
 
-  // Run both AI services in parallel
-  const [deepseekResult, kimiResult] = await Promise.allSettled([
-    deepseekAnalyze(imagePath).catch(err => {
-      console.log(`DeepSeek failed: ${err.message}`);
+  const errors = [];
+
+  // Run both AIs in parallel. Kimi is primary (supports vision), DeepSeek as backup.
+  const [kimiResult, deepseekResult] = await Promise.allSettled([
+    kimiAnalyze(imagePath).catch(err => {
+      errors.push(`Kimi: ${err.message}`);
+      console.log(`Kimi failed: ${err.message}`);
       return null;
     }),
-    kimiAnalyze(imagePath).catch(err => {
-      console.log(`Kimi failed: ${err.message}`);
+    deepseekAnalyze(imagePath).catch(err => {
+      errors.push(`DeepSeek: ${err.message}`);
+      console.log(`DeepSeek failed: ${err.message}`);
       return null;
     }),
   ]);
 
-  const ds = deepseekResult.status === 'fulfilled' ? deepseekResult.value : null;
   const ks = kimiResult.status === 'fulfilled' ? kimiResult.value : null;
+  const ds = deepseekResult.status === 'fulfilled' ? deepseekResult.value : null;
 
   // Collect items from both
   if (ds && ds.items.length > 0) {
@@ -83,14 +87,14 @@ async function recognizeFromImage(imagePath) {
 
   // Determine source label
   let sourceLabel = 'none';
-  if (ds && ks) sourceLabel = 'deepseek+kimi';
-  else if (ds) sourceLabel = 'deepseek';
+  if (ks && ds) sourceLabel = 'kimi+deepseek';
   else if (ks) sourceLabel = 'kimi';
+  else if (ds) sourceLabel = 'deepseek';
 
   // Clean up internal _source field
   const items = merged.map(({ _source, ...item }) => item);
 
-  return { items, source: sourceLabel };
+  return { items, source: sourceLabel, errors: errors.length > 0 ? errors : undefined };
 }
 
 /**
