@@ -1,0 +1,77 @@
+/* pages/index/index.wxss */
+.search-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.search-input {
+  flex: 1;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #ebedf0;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #fff;
+}
+
+.search-btn {
+  margin-left: 8px;
+  padding: 0 16px;
+  height: 40px;
+  line-height: 40px;
+  background-color: #1989fa;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.status-tabs {
+  white-space: nowrap;
+  margin-bottom: 12px;
+  padding-bottom: 4px;
+}
+
+.status-tab {
+  display: inline-block;
+  padding: 6px 14px;
+  margin-right: 8px;
+  font-size: 13px;
+  color: #666;
+  background: #fff;
+  border-radius: 20px;
+  border: 1px solid #ebedf0;
+}
+
+.status-tab.active {
+  color: #1989fa;
+  border-color: #1989fa;
+  background: #e8f4ff;
+}
+
+.rfq-card {
+  border-left: 4px solid #1989fa;
+}
+
+.rfq-title {
+  font-size: 16px;
+  font-weight: 500;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-badge {
+  padding: 2px 10px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+  margin-left: 8px;
+}
+
+.rfq-meta {
+  display: flex;
+  align-items: center;
+}

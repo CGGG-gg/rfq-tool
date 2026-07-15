@@ -1,0 +1,54 @@
+<!-- pages/rfq-edit-item/rfq-edit-item.wxml -->
+<view class="container">
+  <view class="card">
+    <view class="form-group">
+      <text class="form-label">产品名称 *</text>
+      <input class="form-input" data-field="product_name" value="{{form.product_name}}"
+        placeholder="例如：STM32F103C8T6 微控制器" bindinput="onInput" />
+    </view>
+
+    <view class="form-group">
+      <text class="form-label">规格型号</text>
+      <input class="form-input" data-field="specification" value="{{form.specification}}"
+        placeholder="规格/型号/参数" bindinput="onInput" />
+    </view>
+
+    <view class="flex-row">
+      <view class="form-group" style="flex:1; margin-right:8px;">
+        <text class="form-label">数量</text>
+        <input class="form-input" data-field="quantity" value="{{form.quantity}}"
+          type="digit" placeholder="100" bindinput="onInput" />
+      </view>
+      <view class="form-group" style="width:120px;">
+        <text class="form-label">单位</text>
+        <picker mode="selector" range="{{units}}" bindchange="onSelectUnit">
+          <view class="form-input flex-row" style="align-items:center;">
+            {{form.unit || '选择'}} <text style="font-size:10px;color:#999;">▼</text>
+          </view>
+        </picker>
+      </view>
+    </view>
+
+    <view class="form-group">
+      <text class="form-label">目标单价 (元)</text>
+      <input class="form-input" data-field="target_price" value="{{form.target_price}}"
+        type="digit" placeholder="1.50" bindinput="onInput" />
+    </view>
+
+    <view class="form-group">
+      <text class="form-label">交货日期</text>
+      <input class="form-input" data-field="delivery_date" value="{{form.delivery_date}}"
+        placeholder="2024-12-31" bindinput="onInput" />
+    </view>
+
+    <view class="form-group">
+      <text class="form-label">备注</text>
+      <textarea class="form-textarea" data-field="remarks" value="{{form.remarks}}"
+        placeholder="其他要求..." bindinput="onInput" />
+    </view>
+  </view>
+
+  <button class="btn-primary" bindtap="onSubmit" loading="{{saving}}">
+    {{isEdit ? '保存修改' : '添加行项目'}}
+  </button>
+</view>

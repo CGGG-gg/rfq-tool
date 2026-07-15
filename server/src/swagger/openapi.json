@@ -1,0 +1,259 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "RFQ Tool - Open API",
+    "description": "开放 API 用于第三方网站调用 RFQ 询价单生成功能。\n\n**认证方式**: 在 HTTP Header 中传入 `X-API-Key: <your_api_key>`",
+    "version": "1.0.0",
+    "contact": {
+      "name": "RFQ Tool Support"
+    }
+  },
+  "servers": [
+    {
+      "url": "/openapi/v1",
+      "description": "RFQ Tool Server"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API 密钥，请联系管理员获取"
+      }
+    },
+    "schemas": {
+      "RfqItem": {
+        "type": "object",
+        "required": ["product_name"],
+        "properties": {
+          "product_name": { "type": "string", "description": "产品名称" },
+          "specification": { "type": "string", "description": "规格型号" },
+          "quantity": { "type": "number", "description": "数量", "default": 1 },
+          "unit": { "type": "string", "description": "单位", "default": "个" },
+          "target_price": { "type": "number", "description": "目标单价(元)" },
+          "delivery_date": { "type": "string", "description": "交货日期" },
+          "remarks": { "type": "string", "description": "备注" }
+        }
+      },
+      "Rfq": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "status": { "type": "string", "enum": ["draft", "sent", "quoted", "closed"] },
+          "notes": { "type": "string" },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/RfqItem" } },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ImageRecognitionResult": {
+        "type": "object",
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/RfqItem" } },
+          "source": { "type": "string", "enum": ["deepseek", "tencent_ocr", "none"] }
+        }
+      },
+      "WebhookRegistration": {
+        "type": "object",
+        "required": ["url", "events"],
+        "properties": {
+          "name": { "type": "string", "description": "名称（可选）" },
+          "url": { "type": "string", "format": "uri", "description": "回调URL，必须HTTPS" },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["rfq.created", "rfq.updated", "rfq.closed", "supplier.quoted"]
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/rfq/from-image": {
+      "post": {
+        "summary": "上传图片并提取RFQ数据",
+        "description": "上传一张RFQ/产品规格文档图片，返回AI提取的结构化数据。不会保存到数据库，仅返回识别结果。",
+        "operationId": "recognizeFromImage",
+        "tags": ["RFQ 识别"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["image"],
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "图片文件 (JPEG/PNG/WebP, max 10MB)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "识别成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/ImageRecognitionResult" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "未授权 - 无效的API Key" },
+          "413": { "description": "文件过大" }
+        }
+      }
+    },
+    "/rfqs": {
+      "post": {
+        "summary": "创建询价单",
+        "operationId": "createRfq",
+        "tags": ["RFQ 管理"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title"],
+                "properties": {
+                  "title": { "type": "string", "description": "询价单标题" },
+                  "notes": { "type": "string", "description": "备注" },
+                  "items": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/RfqItem" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "创建成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/Rfq" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "未授权" }
+        }
+      },
+      "get": {
+        "summary": "查询询价单列表",
+        "operationId": "listRfqs",
+        "tags": ["RFQ 管理"],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "q", "in": "query", "schema": { "type": "string" }, "description": "搜索关键词" }
+        ],
+        "responses": {
+          "200": { "description": "成功" },
+          "401": { "description": "未授权" }
+        }
+      }
+    },
+    "/rfqs/{id}": {
+      "get": {
+        "summary": "查询询价单详情",
+        "operationId": "getRfq",
+        "tags": ["RFQ 管理"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/Rfq" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "询价单不存在" }
+        }
+      }
+    },
+    "/webhooks": {
+      "post": {
+        "summary": "注册 Webhook",
+        "operationId": "registerWebhook",
+        "tags": ["Webhooks"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/WebhookRegistration" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "注册成功" },
+          "400": { "description": "参数错误" },
+          "401": { "description": "未授权" }
+        }
+      },
+      "get": {
+        "summary": "查询已注册的 Webhooks",
+        "operationId": "listWebhooks",
+        "tags": ["Webhooks"],
+        "responses": {
+          "200": { "description": "成功" }
+        }
+      }
+    },
+    "/webhooks/{id}": {
+      "delete": {
+        "summary": "删除 Webhook",
+        "operationId": "deleteWebhook",
+        "tags": ["Webhooks"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "删除成功" },
+          "404": { "description": "Webhook 不存在" }
+        }
+      }
+    }
+  },
+  "tags": [
+    { "name": "RFQ 识别", "description": "图片识别和RFQ数据提取" },
+    { "name": "RFQ 管理", "description": "询价单的增删改查" },
+    { "name": "Webhooks", "description": "事件回调注册" }
+  ]
+}

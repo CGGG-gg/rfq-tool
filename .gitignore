@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Environment - DO NOT COMMIT real API keys!
+.env
+*.env.local
+*.env.production
+
+# Database
+server/data/rfq.db
+server/data/uploads/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Temp
+*.tmp
+*.swp
+*.swo

@@ -1,0 +1,49 @@
+<!-- pages/supplier-list/supplier-list.wxml -->
+<view class="container">
+  <!-- Search Bar -->
+  <view class="search-bar">
+    <input
+      class="search-input"
+      placeholder="搜索供应商..."
+      value="{{keyword}}"
+      bindinput="onSearchInput"
+      bindconfirm="onSearch"
+      confirm-type="search"
+    />
+    <text class="search-btn" bindtap="onSearch">搜索</text>
+  </view>
+
+  <!-- Supplier List -->
+  <view wx:if="{{suppliers.length > 0}}">
+    <view
+      wx:for="{{suppliers}}"
+      wx:key="id"
+      class="card supplier-card"
+      data-id="{{item.id}}"
+      bindtap="onTapSupplier"
+    >
+      <text class="supplier-name">{{item.name}}</text>
+      <view class="flex-row mt-8">
+        <text wx:if="{{item.contact_person}}" class="text-secondary text-sm">
+          {{item.contact_person}}
+        </text>
+        <text wx:if="{{item.phone}}" class="text-secondary text-sm ml-8">
+          {{item.phone}}
+        </text>
+      </view>
+      <view wx:if="{{item.categories}}" class="mt-8">
+        <text wx:for="{{item.categories}}" wx:key="*this" wx:for-item="cat" class="category-tag">{{cat}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- Empty State -->
+  <view wx:if="{{!loading && suppliers.length === 0}}" class="empty-state">
+    <text class="empty-icon">🏢</text>
+    <text class="empty-text">暂无供应商</text>
+    <text class="action-link mt-8" bindtap="onTapCreate">+ 添加供应商</text>
+  </view>
+
+  <!-- FAB -->
+  <view class="fab" bindtap="onTapCreate">+</view>
+</view>

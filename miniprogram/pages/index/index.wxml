@@ -1,0 +1,62 @@
+<!-- pages/index/index.wxml -->
+<view class="container">
+  <!-- Search Bar -->
+  <view class="search-bar">
+    <input
+      class="search-input"
+      placeholder="搜索询价单..."
+      value="{{keyword}}"
+      bindinput="onSearchInput"
+      bindconfirm="onSearch"
+      confirm-type="search"
+    />
+    <text class="search-btn" bindtap="onSearch">搜索</text>
+  </view>
+
+  <!-- Status Filter -->
+  <scroll-view class="status-tabs" scroll-x="true">
+    <view
+      wx:for="{{statusFilter}}"
+      wx:key="value"
+      class="status-tab {{activeStatusIdx === index ? 'active' : ''}}"
+      data-index="{{index}}"
+      bindtap="onStatusTap"
+    >
+      {{item.label}}
+    </view>
+  </scroll-view>
+
+  <!-- RFQ List -->
+  <view wx:if="{{rfqs.length > 0}}" class="rfq-list">
+    <view
+      wx:for="{{rfqs}}"
+      wx:key="id"
+      class="card rfq-card"
+      data-id="{{item.id}}"
+      bindtap="onTapRfq"
+    >
+      <view class="flex-between">
+        <text class="rfq-title">{{item.title}}</text>
+        <view class="status-badge" style="background-color: {{getStatusInfo(item.status).color}}">
+          {{getStatusInfo(item.status).text}}
+        </view>
+      </view>
+      <view class="rfq-meta mt-8">
+        <text class="text-secondary text-sm">{{formatDate(item.created_at)}}</text>
+        <text class="text-secondary text-sm ml-8">{{item.item_count || 0}} 项</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- Loading More -->
+  <view wx:if="{{loading && rfqs.length > 0}}" class="loading">
+    <text>加载中...</text>
+  </view>
+
+  <!-- Empty State -->
+  <view wx:if="{{!loading && rfqs.length === 0}}" class="empty-state">
+    <text class="empty-icon">📋</text>
+    <text class="empty-text">暂无询价单</text>
+    <text class="text-secondary text-sm mt-8">点击底部"新建"创建第一个询价单</text>
+  </view>
+</view>

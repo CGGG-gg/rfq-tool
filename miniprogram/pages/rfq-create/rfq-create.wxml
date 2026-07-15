@@ -1,0 +1,47 @@
+<!-- pages/rfq-create/rfq-create.wxml -->
+<view class="container">
+  <!-- Basic Info -->
+  <view class="card">
+    <view class="form-group">
+      <text class="form-label">询价单标题 *</text>
+      <input class="form-input" placeholder="例如：2024年Q1电子元器件采购" value="{{title}}" bindinput="onInputTitle" />
+    </view>
+    <view class="form-group">
+      <text class="form-label">备注</text>
+      <textarea class="form-textarea" placeholder="补充说明..." value="{{notes}}" bindinput="onInputNotes" />
+    </view>
+  </view>
+
+  <!-- Items -->
+  <view class="card">
+    <view class="flex-between mb-12">
+      <text class="section-title">行项目 ({{items.length}})</text>
+      <view class="flex-row">
+        <text class="action-link mr-8" bindtap="onScanImage">📷 拍照识别</text>
+        <text class="action-link" bindtap="onAddItem">+ 添加</text>
+      </view>
+    </view>
+
+    <view wx:if="{{items.length > 0}}">
+      <view wx:for="{{items}}" wx:key="index" class="item-row flex-between">
+        <view style="flex:1">
+          <text>{{item.product_name}}</text>
+          <text class="text-secondary text-sm ml-8">x{{item.quantity}} {{item.unit}}</text>
+        </view>
+        <text class="action-link danger" data-index="{{index}}" bindtap="onRemoveItem">删除</text>
+      </view>
+    </view>
+
+    <view wx:else class="empty-state" style="padding:20px">
+      <text class="text-secondary text-sm">还没有行项目，手动添加或拍照识别</text>
+    </view>
+  </view>
+
+  <!-- Submit -->
+  <view class="form-actions">
+    <button class="btn-primary" bindtap="onSubmit" loading="{{saving}}">
+      {{saving ? '保存中...' : '创建询价单'}}
+    </button>
+    <button class="btn-default mt-12" bindtap="onReset">重置</button>
+  </view>
+</view>

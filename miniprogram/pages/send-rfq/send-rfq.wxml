@@ -1,0 +1,41 @@
+<!-- pages/send-rfq/send-rfq.wxml -->
+<view class="container">
+  <!-- Search -->
+  <view class="search-bar">
+    <input class="search-input" placeholder="搜索供应商..." value="{{keyword}}"
+      bindinput="onSearchInput" bindconfirm="onSearch" confirm-type="search" />
+  </view>
+
+  <!-- Select All -->
+  <view class="flex-between mb-12">
+    <text class="text-sm text-secondary">已选 {{selectedIds.length}} / {{suppliers.length}} 个</text>
+    <text class="action-link" bindtap="onSelectAll">
+      {{selectedIds.length === suppliers.length ? '取消全选' : '全选'}}
+    </text>
+  </view>
+
+  <!-- Supplier List -->
+  <view wx:if="{{suppliers.length > 0}}">
+    <view wx:for="{{suppliers}}" wx:key="id" class="card flex-between supplier-select-row"
+      data-id="{{item.id}}" bindtap="onToggleSelect">
+      <view style="flex:1">
+        <text class="font-bold">{{item.name}}</text>
+        <text class="text-secondary text-sm ml-8">{{item.contact_person || ''}}</text>
+      </view>
+      <view class="checkbox {{selectedIds.indexOf(item.id) > -1 ? 'checked' : ''}}">
+        <text wx:if="{{selectedIds.indexOf(item.id) > -1}}">✓</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:else class="empty-state">
+    <text class="empty-text">暂无供应商，请先添加</text>
+  </view>
+
+  <!-- Send Button -->
+  <view class="send-bar">
+    <button class="btn-primary" bindtap="onSend" loading="{{sending}}" disabled="{{selectedIds.length === 0}}">
+      发送给 {{selectedIds.length}} 个供应商
+    </button>
+  </view>
+</view>

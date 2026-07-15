@@ -1,0 +1,50 @@
+<!-- pages/rfq-quotes/rfq-quotes.wxml -->
+<view wx:if="{{!loading}}" class="container">
+  <view class="card mb-12">
+    <text class="font-bold">{{rfq.title}}</text>
+    <text class="text-secondary text-sm ml-8">共 {{suppliers.length}} 个供应商</text>
+  </view>
+
+  <view wx:if="{{suppliers.length > 0}}">
+    <view wx:for="{{suppliers}}" wx:key="id" class="card quote-card">
+      <view class="flex-between">
+        <text class="font-bold">{{item.supplier_name}}</text>
+        <view class="status-badge" style="background-color:{{item.responded ? '#07c160' : '#999'}}">
+          {{item.responded ? '已报价' : '未回复'}}
+        </view>
+      </view>
+
+      <text class="text-secondary text-sm">联系人: {{item.supplier_contact_person || '-'}}</text>
+      <text class="text-secondary text-sm ml-8">电话: {{item.supplier_phone || '-'}}</text>
+
+      <block wx:if="{{item.responded}}">
+        <view class="quote-amount mt-8">
+          <text class="text-lg font-bold" style="color:#ee0a24;">
+            {{formatCurrency(item.quote_amount)}}
+          </text>
+        </view>
+        <view wx:if="{{item.quote_notes}}" class="mt-8">
+          <text class="text-sm">{{item.quote_notes}}</text>
+        </view>
+        <text class="text-secondary text-sm mt-8">
+          回复时间: {{formatDate(item.responded_at)}}
+        </text>
+      </block>
+
+      <block wx:else>
+        <button class="btn-primary btn-sm mt-8" data-supplier="{{item}}" bindtap="onRecordQuote">
+          录入报价
+        </button>
+      </block>
+    </view>
+  </view>
+
+  <view wx:else class="empty-state">
+    <text class="empty-icon">📭</text>
+    <text class="empty-text">尚未发送给供应商</text>
+  </view>
+</view>
+
+<view wx:if="{{loading}}" class="loading">
+  <text>加载中...</text>
+</view>

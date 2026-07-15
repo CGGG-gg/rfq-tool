@@ -1,0 +1,63 @@
+/* pages/supplier-list/supplier-list.wxss */
+.search-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.search-input {
+  flex: 1;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #ebedf0;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #fff;
+}
+
+.search-btn {
+  margin-left: 8px;
+  padding: 0 16px;
+  height: 40px;
+  line-height: 40px;
+  background-color: #1989fa;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.supplier-card {
+  border-left: 4px solid #1989fa;
+}
+
+.supplier-name {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.category-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  margin-right: 6px;
+  margin-bottom: 4px;
+  background: #e8f4ff;
+  color: #1989fa;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.fab {
+  position: fixed;
+  right: 20px;
+  bottom: 80px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #1989fa;
+  color: #fff;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(25, 137, 250, 0.4);
+}
