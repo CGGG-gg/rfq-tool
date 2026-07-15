@@ -1,54 +1,12 @@
 {
   "pages": [
-    "pages/index/index",
-    "pages/rfq-detail/rfq-detail",
-    "pages/rfq-create/rfq-create",
-    "pages/rfq-edit-item/rfq-edit-item",
-    "pages/image-recognize/image-recognize",
-    "pages/supplier-list/supplier-list",
-    "pages/supplier-detail/supplier-detail",
-    "pages/supplier-create/supplier-create",
-    "pages/send-rfq/send-rfq",
-    "pages/rfq-quotes/rfq-quotes",
-    "pages/profile/profile"
+    "pages/index/index"
   ],
   "window": {
-    "backgroundTextStyle": "light",
+    "navigationBarTitleText": "图片转RFQ",
     "navigationBarBackgroundColor": "#1989fa",
-    "navigationBarTitleText": "RFQ 询价工具",
-    "navigationBarTextStyle": "white"
-  },
-  "tabBar": {
-    "color": "#999999",
-    "selectedColor": "#1989fa",
-    "backgroundColor": "#ffffff",
-    "borderStyle": "black",
-    "list": [
-      {
-        "pagePath": "pages/index/index",
-        "text": "询价单",
-        "iconPath": "",
-        "selectedIconPath": ""
-      },
-      {
-        "pagePath": "pages/rfq-create/rfq-create",
-        "text": "新建",
-        "iconPath": "",
-        "selectedIconPath": ""
-      },
-      {
-        "pagePath": "pages/supplier-list/supplier-list",
-        "text": "供应商",
-        "iconPath": "",
-        "selectedIconPath": ""
-      },
-      {
-        "pagePath": "pages/profile/profile",
-        "text": "我的",
-        "iconPath": "",
-        "selectedIconPath": ""
-      }
-    ]
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#ffffff"
   },
   "usingComponents": {}
 }

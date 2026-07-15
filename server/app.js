@@ -14,9 +14,31 @@ const app = express();
 
 // --------------- Global middleware ---------------
 app.use(cors());
+
+// Force UTF-8 on all JSON/text responses
+app.use((req, res, next) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  const origJson = res.json.bind(res);
+  res.json = function (body) {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    return origJson(body);
+  };
+  const origSend = res.send.bind(res);
+  res.send = function (body) {
+    if (typeof body === 'string' && !res.getHeader('Content-Type')) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    }
+    return origSend(body);
+  };
+  next();
+});
+
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
+
+// --------------- Static web UI (serves index.html at /) ---------------
+app.use(express.static(path.resolve(__dirname, 'public')));
 
 // --------------- Static (for exports only) ---------------
 app.use('/exports', express.static(path.resolve(__dirname, 'data', 'uploads', 'exports')));
@@ -27,7 +49,7 @@ app.use('/exports', express.static(path.resolve(__dirname, 'data', 'uploads', 'e
 const authRoutes = require('./src/routes/auth');
 app.use('/api/v1/auth', authRoutes);
 
-// Internal API routes (will use auth middleware after Phase 6)
+// Internal API routes
 const rfqRoutes = require('./src/routes/rfqs');
 const supplierRoutes = require('./src/routes/suppliers');
 const uploadRoutes = require('./src/routes/uploads');
@@ -45,9 +67,6 @@ const webhookRoutes = require('./src/routes/openapi/webhooks');
 app.use('/openapi/v1', openRfqRoutes);
 app.use('/openapi/v1', webhookRoutes);
 
-// --------------- Static web UI (serves index.html at /) ---------------
-app.use(express.static(path.resolve(__dirname, 'public')));
-
 // --------------- Health check ---------------
 app.get('/health', (req, res) => {
   res.json({ success: true, message: 'RFQ Tool API is running.', timestamp: new Date().toISOString() });
@@ -59,10 +78,10 @@ app.use(errorHandler);
 // --------------- Start server ---------------
 const PORT = config.port;
 app.listen(PORT, () => {
-  console.log(`🚀 RFQ Tool server running on http://localhost:${PORT}`);
-  console.log(`   Internal API: http://localhost:${PORT}/api/v1`);
-  console.log(`   Open API:     http://localhost:${PORT}/openapi/v1`);
-  console.log(`   Health check: http://localhost:${PORT}/health`);
+  console.log(`RFQ Tool server running on http://localhost:${PORT}`);
+  console.log(`  Web UI:       http://localhost:${PORT}/`);
+  console.log(`  Internal API: http://localhost:${PORT}/api/v1`);
+  console.log(`  Open API:     http://localhost:${PORT}/openapi/v1`);
 });
 
 module.exports = app;

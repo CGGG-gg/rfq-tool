@@ -1,62 +1,74 @@
-<!-- pages/index/index.wxml -->
-<view class="container">
-  <!-- Search Bar -->
-  <view class="search-bar">
-    <input
-      class="search-input"
-      placeholder="搜索询价单..."
-      value="{{keyword}}"
-      bindinput="onSearchInput"
-      bindconfirm="onSearch"
-      confirm-type="search"
-    />
-    <text class="search-btn" bindtap="onSearch">搜索</text>
+<view class="page">
+  <!-- 标题 -->
+  <view class="header">
+    <text class="title">📷 图片转 RFQ</text>
+    <text class="subtitle">拍照或上传产品规格图 → AI 自动生成询价单</text>
   </view>
 
-  <!-- Status Filter -->
-  <scroll-view class="status-tabs" scroll-x="true">
-    <view
-      wx:for="{{statusFilter}}"
-      wx:key="value"
-      class="status-tab {{activeStatusIdx === index ? 'active' : ''}}"
-      data-index="{{index}}"
-      bindtap="onStatusTap"
-    >
-      {{item.label}}
+  <!-- 上传区 / 图片预览 -->
+  <view class="upload-section">
+    <view wx:if="{{!imagePath}}" class="upload-btn" bindtap="chooseImage">
+      <text class="upload-icon">📷</text>
+      <text class="upload-text">点击拍照或选择图片</text>
+      <text class="upload-hint">支持 JPG / PNG，最大 10MB</text>
     </view>
-  </scroll-view>
 
-  <!-- RFQ List -->
-  <view wx:if="{{rfqs.length > 0}}" class="rfq-list">
-    <view
-      wx:for="{{rfqs}}"
-      wx:key="id"
-      class="card rfq-card"
-      data-id="{{item.id}}"
-      bindtap="onTapRfq"
-    >
-      <view class="flex-between">
-        <text class="rfq-title">{{item.title}}</text>
-        <view class="status-badge" style="background-color: {{getStatusInfo(item.status).color}}">
-          {{getStatusInfo(item.status).text}}
-        </view>
-      </view>
-      <view class="rfq-meta mt-8">
-        <text class="text-secondary text-sm">{{formatDate(item.created_at)}}</text>
-        <text class="text-secondary text-sm ml-8">{{item.item_count || 0}} 项</text>
+    <view wx:if="{{imagePath && !recognizing && !recognized}}" class="preview-box">
+      <image src="{{imagePath}}" mode="widthFix" class="preview-img" />
+      <view class="preview-actions">
+        <button class="act-btn act-repick" bindtap="chooseImage">重选</button>
+        <button class="act-btn act-go" bindtap="startRecognize">开始识别</button>
       </view>
     </view>
   </view>
 
-  <!-- Loading More -->
-  <view wx:if="{{loading && rfqs.length > 0}}" class="loading">
-    <text>加载中...</text>
+  <!-- 识别中 -->
+  <view wx:if="{{recognizing}}" class="loading-box">
+    <view class="spinner"></view>
+    <text class="loading-text">AI 正在分析图片...</text>
+    <text class="loading-sub">DeepSeek + Kimi 并行识别</text>
   </view>
 
-  <!-- Empty State -->
-  <view wx:if="{{!loading && rfqs.length === 0}}" class="empty-state">
-    <text class="empty-icon">📋</text>
-    <text class="empty-text">暂无询价单</text>
-    <text class="text-secondary text-sm mt-8">点击底部"新建"创建第一个询价单</text>
+  <!-- 错误 -->
+  <view wx:if="{{error}}" class="error-box">
+    <text>❌ {{error}}</text>
+    <button class="retry-btn" bindtap="reset">重新上传</button>
+  </view>
+
+  <!-- 识别结果 -->
+  <view wx:if="{{recognized && items.length > 0}}" class="result-section">
+    <view class="result-header">
+      <text class="result-title">识别结果（可修改）</text>
+      <text class="result-source">{{source}}</text>
+    </view>
+
+    <view wx:for="{{items}}" wx:key="index" class="item-card">
+      <input class="item-input name-input" value="{{item.product_name}}"
+        data-index="{{index}}" data-field="product_name" bindinput="onItemChange"
+        placeholder="产品名称" />
+
+      <view class="item-row">
+        <input class="item-input qty-input" value="{{item.quantity}}" type="digit"
+          data-index="{{index}}" data-field="quantity" bindinput="onItemChange"
+          placeholder="数量" />
+        <input class="item-input unit-input" value="{{item.unit}}"
+          data-index="{{index}}" data-field="unit" bindinput="onItemChange"
+          placeholder="单位" />
+        <input class="item-input price-input" value="{{item.target_price}}" type="digit"
+          data-index="{{index}}" data-field="target_price" bindinput="onItemChange"
+          placeholder="单价(元)" />
+      </view>
+
+      <input class="item-input" value="{{item.specification}}"
+        data-index="{{index}}" data-field="specification" bindinput="onItemChange"
+        placeholder="规格型号（可选）" />
+    </view>
+
+    <!-- 下载按钮 -->
+    <view class="download-section">
+      <button class="dl-btn dl-excel" bindtap="downloadExcel">📥 下载 Excel</button>
+      <button class="dl-btn dl-pdf" bindtap="downloadPDF">📥 下载 PDF</button>
+      <button class="dl-btn dl-retry" bindtap="reset">🔄 重新上传</button>
+    </view>
   </view>
 </view>

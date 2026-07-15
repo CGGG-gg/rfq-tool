@@ -1,51 +1,17 @@
 {
-  "description": "RFQ 询价工具 - 微信小程序",
-  "packOptions": {
-    "ignore": [],
-    "include": []
-  },
+  "description": "图片转RFQ - 拍照上传自动生成询价单",
+  "packOptions": { "ignore": [], "include": [] },
   "setting": {
-    "bundle": false,
-    "userConfirmedBundleSwitch": false,
-    "urlCheck": true,
-    "scopeDataCheck": false,
-    "coverView": true,
+    "urlCheck": false,
     "es6": true,
     "postcss": true,
-    "compileHotReLoad": false,
-    "lazyloadPlaceholderEnable": false,
-    "preloadBackgroundData": false,
-    "minified": true,
-    "autoAudits": false,
-    "newFeature": false,
-    "uglifyFileName": false,
-    "uploadWithSourceMap": true,
-    "useIsolateContext": true,
-    "nodeModules": false,
-    "enhance": true,
-    "useMultiFrameRuntime": true,
-    "useApiHook": true,
-    "useApiHostProcess": true,
-    "showShadowRootInWxmlPanel": true,
-    "packNpmManually": false,
-    "enableEngineNative": false,
-    "packNpmRelationList": [],
-    "minifyWXSS": true,
-    "showES6CompileOption": false,
-    "minifyWXML": true,
-    "babelSetting": {
-      "ignore": [],
-      "disablePlugins": [],
-      "outputPath": ""
-    }
+    "minified": false,
+    "newFeature": true,
+    "enhance": true
   },
   "compileType": "miniprogram",
   "libVersion": "3.3.4",
-  "appid": "your_appid_here",
+  "appid": "touristappid",
   "projectname": "rfq-tool",
-  "condition": {},
-  "editorSetting": {
-    "tabIndent": "insertSpaces",
-    "tabSize": 2
-  }
+  "condition": {}
 }

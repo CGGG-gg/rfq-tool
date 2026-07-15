@@ -3,306 +3,210 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>RFQ 询价工具</title>
+<title>图片转RFQ</title>
 <style>
-:root{--blue:#1989fa;--green:#07c160;--orange:#ff976a;--red:#ee0a24;--gray:#999;--bg:#f5f5f5}
+:root{--blue:#1989fa;--green:#07c160;--gray:#999;--bg:#f5f5f5}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,sans-serif;background:var(--bg);color:#333;font-size:14px;padding-bottom:70px}
-.page{display:none;padding:12px}
-.page.active{display:block}
-.card{background:#fff;border-radius:10px;padding:14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.title{font-size:15px;font-weight:600}
-.meta{font-size:12px;color:var(--gray);margin-top:4px}
-.row{display:flex;align-items:center}
-.between{justify-content:space-between}
-.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;color:#fff}
-.tag-draft{background:var(--gray)}.tag-sent{background:var(--blue)}
-.tag-quoted{background:var(--orange)}.tag-closed{background:var(--gray)}
-.empty{text-align:center;padding:40px 20px;color:var(--gray);font-size:14px}
-.empty small{font-size:12px;display:block;margin-top:6px}
-.btn{border:none;border-radius:6px;padding:10px 18px;font-size:14px;background:#e5e5e5;color:#333;margin:4px;display:inline-block;text-decoration:none}
-.btn-blue{background:var(--blue);color:#fff}
-.btn-red{background:var(--red);color:#fff}
-.btn-green{background:var(--green);color:#fff}
-input,textarea{width:100%;border:1px solid #ddd;border-radius:6px;padding:10px;font-size:14px;margin:6px 0;font-family:inherit}
-textarea{min-height:60px;resize:vertical}
-label{font-weight:500;font-size:13px;margin-top:8px;display:block}
-.item-row{padding:10px 0;border-bottom:1px solid #f0f0f0}
-.item-row:last-child{border-bottom:none}
-.success{color:var(--green);font-weight:600;padding:10px 0}
-.loading{text-align:center;padding:20px;color:var(--gray)}
-.mt-8{margin-top:8px}
-img{max-width:100%}
-
-/* Tab bar */
-.tab-bar{position:fixed;bottom:0;left:0;right:0;height:60px;background:#fff;display:flex;border-top:1px solid #eee;z-index:100}
-.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;color:var(--gray);cursor:pointer;border:none;background:none}
-.tab .icon{font-size:20px;margin-bottom:2px}
-.tab.active{color:var(--blue)}
-
-/* Recognize area */
-.upload-zone{border:2px dashed #ddd;border-radius:10px;padding:40px 20px;text-align:center;color:var(--gray);cursor:pointer;margin:12px 0}
-.upload-zone:hover{border-color:var(--blue)}
+body{font-family:-apple-system,sans-serif;background:#fff;color:#333;font-size:14px;min-height:100vh}
+.container{max-width:420px;margin:0 auto;padding:16px}
+h1{font-size:20px;text-align:center;padding:20px 0;color:#333}
+.step{font-size:13px;color:var(--gray);text-align:center;margin-bottom:12px}
+.upload-zone{border:2px dashed #ddd;border-radius:12px;padding:60px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--blue);background:#f0f7ff}
+.upload-zone .icon{font-size:48px;display:block;margin-bottom:12px}
+.upload-zone .hint{color:var(--gray);font-size:13px;margin-top:8px}
+.preview-img{width:100%;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.1);margin-bottom:16px}
+.status{text-align:center;padding:20px;color:var(--gray)}
+.status .spinner{display:inline-block;width:24px;height:24px;border:3px solid #e0e0e0;border-top:3px solid var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.result-card{background:#f9fafb;border-radius:10px;padding:16px;margin-bottom:12px}
+.result-card .name{font-size:15px;font-weight:600}
+.result-card .row{display:flex;gap:16px;margin-top:6px;font-size:13px;color:#666}
+.result-card input{flex:1;border:1px solid #ddd;border-radius:6px;padding:6px 8px;font-size:13px;margin-top:6px}
+.btn{display:block;width:100%;border:none;border-radius:8px;padding:14px;font-size:16px;font-weight:600;cursor:pointer;text-align:center;margin-bottom:10px}
+.btn-blue{background:var(--blue);color:#fff}.btn-blue:active{opacity:.8}
+.btn-green{background:var(--green);color:#fff}.btn-green:active{opacity:.8}
+.btn-white{background:#fff;color:var(--blue);border:1px solid var(--blue)}
+.btn:disabled{opacity:.5;pointer-events:none}
+.source-tag{font-size:11px;color:var(--gray);text-align:center;margin:8px 0}
+.error{color:#ee0a24;text-align:center;padding:10px;font-size:13px}
+.hidden{display:none!important}
 </style>
 </head>
 <body>
+<div class="container">
+  <h1>📷 图片转 RFQ</h1>
+  <p class="step">上传产品规格图片 → AI 自动识别提取 → 生成询价单</p>
 
-<!-- RFQ List Page -->
-<div id="pg-rfqs" class="page active">
-  <div style="padding:8px 0 4px;font-size:18px;font-weight:700">📋 询价单</div>
-  <div id="rfq-list"></div>
-</div>
-
-<!-- RFQ Detail Page -->
-<div id="pg-detail" class="page">
-  <div style="cursor:pointer;color:var(--blue);margin-bottom:8px" onclick="location.hash='rfqs'">← 返回列表</div>
-  <div class="card">
-    <div class="row between"><span class="detail-title" style="font-size:18px;font-weight:700"></span><span class="detail-status tag"></span></div>
+  <!-- Step 1: Upload -->
+  <div id="upload-area">
+    <label class="upload-zone" for="file-input">
+      <span class="icon">📷</span>
+      <strong>点击选择图片</strong>
+      <div class="hint">支持 JPG / PNG / WebP，最大 10MB</div>
+    </label>
+    <input type="file" id="file-input" accept="image/*" style="display:none">
   </div>
-  <div style="padding:4px 0;font-weight:600">行项目</div>
-  <div class="detail-items card"></div>
-  <div style="padding:4px 0;font-weight:600">供应商</div>
-  <div class="detail-suppliers card"></div>
-  <div class="detail-actions" style="text-align:center;padding:8px 0"></div>
-</div>
 
-<!-- Create RFQ Page -->
-<div id="pg-create" class="page">
-  <div style="padding:8px 0 4px;font-size:18px;font-weight:700">📝 新建询价单</div>
-  <form id="create-form" class="card">
-    <label>标题 *</label><input id="create-title" placeholder="例如：2024年Q1电子元器件采购" required>
-    <label>备注</label><textarea id="create-notes" placeholder="补充说明..."></textarea>
-    <button type="submit" class="btn btn-blue" style="width:100%;margin-top:12px">创建</button>
-  </form>
-</div>
+  <div id="preview-area" class="hidden"></div>
 
-<!-- Recognize Page -->
-<div id="pg-recognize" class="page">
-  <div style="padding:8px 0 4px;font-size:18px;font-weight:700">📷 拍照识别</div>
-  <label class="upload-zone" for="recognize-input">📷<br>点击选择图片<br><small>支持 JPG/PNG/WebP</small></label>
-  <input type="file" id="recognize-input" accept="image/*" style="display:none">
-  <div id="recognize-preview" class="card" style="text-align:center"></div>
-  <div id="recognize-result"></div>
-</div>
-
-<!-- Suppliers Page -->
-<div id="pg-suppliers" class="page">
-  <div style="padding:8px 0 4px;font-size:18px;font-weight:700">🏢 供应商</div>
-  <div id="supplier-list"></div>
-  <div class="card">
-    <div style="font-weight:600;margin-bottom:8px">+ 添加供应商</div>
-    <form id="supplier-form">
-      <input id="sup-name" placeholder="供应商名称 *" required>
-      <input id="sup-contact" placeholder="联系人">
-      <input id="sup-phone" placeholder="电话">
-      <input id="sup-email" placeholder="邮箱">
-      <input id="sup-address" placeholder="地址">
-      <input id="sup-categories" placeholder="供应类别 (逗号分隔)">
-      <button type="submit" class="btn btn-green" style="width:100%;margin-top:8px">添加</button>
-    </form>
+  <!-- Step 2: Loading -->
+  <div id="loading-area" class="status hidden">
+    <div class="spinner"></div>
+    <div>AI 正在分析图片...</div>
+    <div style="font-size:12px;color:var(--gray);margin-top:4px">DeepSeek + Kimi 并行识别</div>
   </div>
-</div>
 
-<!-- Tab Bar -->
-<div class="tab-bar">
-  <button class="tab active" data-page="rfqs"><span class="icon">📋</span>询价单</button>
-  <button class="tab" data-page="create"><span class="icon">📝</span>新建</button>
-  <button class="tab" data-page="recognize"><span class="icon">📷</span>拍照识别</button>
-  <button class="tab" data-page="suppliers"><span class="icon">🏢</span>供应商</button>
+  <!-- Step 3: Result -->
+  <div id="result-area" class="hidden">
+    <div style="font-size:15px;font-weight:600;margin-bottom:12px">识别结果（可修改）</div>
+    <div id="items-list"></div>
+    <div class="source-tag" id="source-info"></div>
+    <button class="btn btn-blue" onclick="downloadExcel()">📥 下载 Excel</button>
+    <button class="btn btn-white" onclick="downloadPDF()">📥 下载 PDF</button>
+    <button class="btn btn-white" onclick="resetAll()">🔄 重新上传</button>
+  </div>
+
+  <!-- Error -->
+  <div id="error-area" class="error hidden"></div>
 </div>
 
 <script>
-// ── API ──
-const API = {
-  get: p => fetch(p).then(r => r.json()),
-  post: (p, d) => fetch(p, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(d) }).then(r => r.json()),
-  put: (p, d) => fetch(p, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(d) }).then(r => r.json()),
-  del: p => fetch(p, { method:'DELETE' }).then(r => r.json()),
-  upload(p, file, extra) {
-    const fd = new FormData(); fd.append('images', file);
-    Object.entries(extra||{}).forEach(([k,v]) => fd.append(k,v));
-    return fetch(p, { method:'POST', body: fd }).then(r => r.json());
+let currentRfqId = null;
+let currentItems = [];
+
+const fileInput = document.getElementById('file-input');
+fileInput.addEventListener('change', handleFile);
+
+const uploadZone = document.querySelector('.upload-zone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) processImage(file);
+});
+
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (file) processImage(file);
+}
+
+async function processImage(file) {
+  const up = document.getElementById('upload-area');
+  const preview = document.getElementById('preview-area');
+  const loading = document.getElementById('loading-area');
+  const result = document.getElementById('result-area');
+  const error = document.getElementById('error-area');
+
+  up.classList.add('hidden');
+  error.classList.add('hidden');
+  result.classList.add('hidden');
+
+  // Preview
+  preview.innerHTML = `<img src="${URL.createObjectURL(file)}" class="preview-img">`;
+  preview.classList.remove('hidden');
+  loading.classList.remove('hidden');
+
+  try {
+    // 1) Upload image to server
+    const fd = new FormData();
+    fd.append('images', file);
+    const uploadRes = await fetch('/api/v1/uploads', { method:'POST', body:fd }).then(r=>r.json());
+    if (!uploadRes.success) throw new Error(uploadRes.error);
+
+    // 2) Create a temporary RFQ
+    const rfqRes = await fetch('/api/v1/rfqs', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ title: file.name, notes: 'AI 识别结果' })
+    }).then(r=>r.json());
+    if (!rfqRes.success) throw new Error(rfqRes.error);
+    currentRfqId = rfqRes.data.id;
+
+    // 3) Associate image with RFQ
+    const fd2 = new FormData();
+    fd2.append('images', file);
+    await fetch('/api/v1/rfqs/'+currentRfqId+'/images', { method:'POST', body:fd2 });
+
+    // 4) Recognize
+    const recRes = await fetch('/api/v1/rfqs/'+currentRfqId+'/recognize', { method:'POST' }).then(r=>r.json());
+    if (!recRes.success || !recRes.data.items.length) {
+      throw new Error('未能从图片中识别到产品信息，请尝试更清晰的图片');
+    }
+
+    currentItems = recRes.data.items;
+
+    // 5) Show results
+    loading.classList.add('hidden');
+    preview.classList.add('hidden');
+    renderItems(currentItems);
+    document.getElementById('source-info').textContent = '识别引擎: ' + (recRes.data.source || 'AI');
+    result.classList.remove('hidden');
+
+  } catch (e) {
+    loading.classList.add('hidden');
+    preview.classList.add('hidden');
+    error.textContent = '❌ ' + e.message;
+    error.classList.remove('hidden');
+    document.getElementById('upload-area').classList.remove('hidden');
   }
-};
-
-// ── Router ──
-let curId = null;
-window.addEventListener('hashchange', route);
-route();
-
-function route() {
-  const h = location.hash.slice(1) || 'rfqs';
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-
-  if (h.startsWith('detail/')) { curId = h.split('/')[1]; showPg('pg-detail'); loadDetail(curId); return; }
-
-  const map = { rfqs: ['pg-rfqs', loadRfqs], create: ['pg-create', null], recognize: ['pg-recognize', null], suppliers: ['pg-suppliers', loadSuppliers] };
-  const [pg, loader] = map[h] || [null, null];
-  if (pg) { showPg(pg); if (loader) loader(); }
-  const tab = document.querySelector(`.tab[data-page="${h}"]`);
-  if (tab) tab.classList.add('active');
 }
 
-function showPg(id) { document.getElementById(id).classList.add('active'); }
-
-// ── Tabs ──
-document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => { location.hash = t.dataset.page; }));
-
-// ── RFQ List ──
-async function loadRfqs() {
-  const el = document.getElementById('rfq-list');
-  try {
-    const r = await API.get('/api/v1/rfqs?limit=50');
-    if (!r.success || !r.data.length) { el.innerHTML = '<div class="empty">📋<br>暂无询价单<small>点击"新建"创建第一个</small></div>'; return; }
-    el.innerHTML = r.data.map(x => `<div class="card" onclick="location.hash='detail/${x.id}'"><div class="row between"><span class="title">${esc(x.title)}</span><span class="tag tag-${x.status}">${st(x.status)}</span></div><div class="meta">${x.item_count||0} 项 · ${fmt(x.created_at)}</div></div>`).join('');
-  } catch(e) { el.innerHTML = '<div class="empty">网络错误</div>'; }
+function renderItems(items) {
+  const list = document.getElementById('items-list');
+  list.innerHTML = items.map((item, i) => `
+    <div class="result-card">
+      <input value="${esc(item.product_name)}" placeholder="产品名称" onchange="updateItem(${i},'product_name',this.value)">
+      <div class="row">
+        <input value="${item.quantity}" type="number" placeholder="数量" style="width:80px" onchange="updateItem(${i},'quantity',this.value)">
+        <input value="${item.unit}" placeholder="单位" style="width:60px" onchange="updateItem(${i},'unit',this.value)">
+        <input value="${item.target_price||''}" type="number" placeholder="单价" style="flex:1" onchange="updateItem(${i},'target_price',this.value)">
+      </div>
+      <input value="${esc(item.specification||'')}" placeholder="规格型号（可选）" onchange="updateItem(${i},'specification',this.value)">
+    </div>
+  `).join('');
 }
 
-// ── RFQ Detail ──
-async function loadDetail(id) {
-  const el = document.getElementById('pg-detail');
-  try {
-    const r = await API.get('/api/v1/rfqs/' + id);
-    if (!r.success) return;
-    const d = r.data;
-    el.querySelector('.detail-title').textContent = d.title;
-    el.querySelector('.detail-status').textContent = st(d.status);
-    el.querySelector('.detail-status').className = 'tag tag-' + d.status;
-
-    const itemsEl = el.querySelector('.detail-items');
-    if (!d.items || !d.items.length) {
-      itemsEl.innerHTML = '<div class="empty">暂无行项目<small>可拍照识别或手动添加</small></div>';
-    } else {
-      itemsEl.innerHTML = d.items.map((x,i) => `<div class="item-row"><div class="row between"><strong>${i+1}. ${esc(x.product_name)}</strong><span>x${x.quantity} ${x.unit}</span></div>${x.specification?`<div class="meta">规格: ${esc(x.specification)}</div>`:''}${x.target_price?`<div class="meta">目标单价: ¥${x.target_price}</div>`:''}</div>`).join('');
-    }
-
-    const supEl = el.querySelector('.detail-suppliers');
-    if (!d.suppliers || !d.suppliers.length) {
-      supEl.innerHTML = '<div class="meta">未发送供应商</div>';
-    } else {
-      supEl.innerHTML = d.suppliers.map(s => `<div class="item-row"><div class="row between"><span>${esc(s.supplier_name)}</span><span class="meta">${s.responded?'✅ 已报价 ¥'+s.quote_amount:'⏳ 未回复'}</span></div></div>`).join('');
-    }
-
-    const act = el.querySelector('.detail-actions'); act.innerHTML = '';
-    if (d.status === 'draft') {
-      act.innerHTML += `<button class="btn btn-blue" onclick="addItem('${id}')">+ 添加行项目</button>`;
-      act.innerHTML += `<button class="btn btn-blue" onclick="sendRfq('${id}')">📤 发送供应商</button>`;
-    }
-    if (d.status === 'sent' || d.status === 'quoted') act.innerHTML += `<button class="btn btn-red" onclick="closeRfq('${id}')">关闭询价</button>`;
-    act.innerHTML += `<button class="btn" onclick="window.open('/api/v1/rfqs/${id}/export/excel')">📥 Excel</button>`;
-    act.innerHTML += `<button class="btn" onclick="window.open('/api/v1/rfqs/${id}/export/pdf')">📥 PDF</button>`;
-  } catch(e) { el.querySelector('.detail-title').textContent = '加载失败'; }
+function updateItem(index, field, value) {
+  currentItems[index][field] = value;
 }
 
-async function addItem(id) {
-  const name = prompt('产品名称:'); if (!name) return;
-  const qty = parseFloat(prompt('数量:')) || 1;
-  const unit = prompt('单位:', '个') || '个';
-  const spec = prompt('规格型号(可选):');
-  const price = prompt('目标单价(可选):');
-  const r = await API.post('/api/v1/rfqs/'+id+'/items', { product_name:name, quantity:qty, unit, specification:spec||'', target_price:price?parseFloat(price):null });
-  if (r.success) loadDetail(id); else alert('失败: '+r.error);
+async function downloadExcel() {
+  await saveItems();
+  window.open('/api/v1/rfqs/'+currentRfqId+'/export/excel');
 }
 
-async function sendRfq(id) {
-  const supRes = await API.get('/api/v1/suppliers?limit=100');
-  if (!supRes.success||!supRes.data.length) { alert('请先在"供应商"页面添加供应商'); return; }
-  const names = supRes.data.map(s => s.name).join('\n');
-  const input = prompt('输入供应商名称（完整匹配）:\n已有供应商:\n' + names);
-  if (!input) return;
-  const s = supRes.data.find(x => x.name.includes(input.trim()) || input.trim().includes(x.name));
-  if (!s) { alert('未匹配到供应商'); return; }
-  const r = await API.post('/api/v1/rfqs/'+id+'/send', { supplier_ids: [s.id] });
-  if (r.success) { alert('已发送给 '+s.name); loadDetail(id); } else alert('发送失败');
+async function downloadPDF() {
+  await saveItems();
+  window.open('/api/v1/rfqs/'+currentRfqId+'/export/pdf');
 }
 
-async function closeRfq(id) {
-  if (!confirm('确定关闭？')) return;
-  await API.post('/api/v1/rfqs/'+id+'/close');
-  loadDetail(id);
+async function saveItems() {
+  if (!currentRfqId || !currentItems.length) return;
+  await fetch('/api/v1/rfqs/'+currentRfqId+'/items/bulk', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ items: currentItems.map(i => ({
+      product_name: i.product_name, specification: i.specification||'',
+      quantity: parseFloat(i.quantity)||1, unit: i.unit||'个',
+      target_price: i.target_price?parseFloat(i.target_price):null,
+      delivery_date: i.delivery_date||null, remarks: i.remarks||''
+    })) })
+  });
 }
 
-// ── Create RFQ ──
-document.getElementById('create-form').addEventListener('submit', async e => {
-  e.preventDefault();
-  const title = document.getElementById('create-title').value.trim();
-  if (!title) return;
-  const notes = document.getElementById('create-notes').value.trim();
-  const r = await API.post('/api/v1/rfqs', { title, notes });
-  if (r.success) { document.getElementById('create-form').reset(); location.hash = 'detail/'+r.data.id; }
-  else alert('失败: '+r.error);
-});
-
-// ── Recognize ──
-document.getElementById('recognize-input').addEventListener('change', async e => {
-  const file = e.target.files[0]; if (!file) return;
-  const preview = document.getElementById('recognize-preview');
-  const result = document.getElementById('recognize-result');
-  preview.innerHTML = `<img src="${URL.createObjectURL(file)}" style="max-width:100%;border-radius:8px">`;
-  result.innerHTML = '<div class="loading">AI 识别中 (DeepSeek + Kimi 并行)...</div>';
-
-  try {
-    // upload → create rfq → recognize → bulk insert
-    const up = await API.upload('/api/v1/uploads', file);
-    if (!up.success) { result.innerHTML = `<div class="empty">上传失败: ${up.error}</div>`; return; }
-    const imgId = up.data[0].id;
-
-    const cr = await API.post('/api/v1/rfqs', { title: '📷 '+file.name, notes: 'AI识别结果' });
-    if (!cr.success) { result.innerHTML = '<div class="empty">创建RFQ失败</div>'; return; }
-    const rfqId = cr.data.id;
-
-    // associate image
-    await API.upload('/api/v1/rfqs/'+rfqId+'/images', file);
-
-    const rec = await API.post('/api/v1/rfqs/'+rfqId+'/recognize');
-    if (!rec.success || !rec.data.items.length) {
-      result.innerHTML = `<div class="empty">未能识别到产品<br><small>来源: ${rec.data?.source||'unknown'}</small></div>`; return;
-    }
-
-    await API.post('/api/v1/rfqs/'+rfqId+'/items/bulk', { items: rec.data.items });
-
-    result.innerHTML = `<div class="success">✅ 识别成功 (${rec.data.source}) — ${rec.data.items.length} 个产品</div>`
-      + rec.data.items.map((x,i) => `<div class="item-row"><strong>${i+1}. ${esc(x.product_name)}</strong><div class="meta">${esc(x.specification||'-')} | ${x.quantity}${x.unit} ${x.target_price?'| ¥'+x.target_price:''}</div></div>`).join('')
-      + `<button class="btn btn-blue mt-8" onclick="location.hash='detail/${rfqId}'">查看询价单 →</button>`;
-  } catch(ex) { result.innerHTML = '<div class="empty">出错: '+ex.message+'</div>'; }
-});
-
-// ── Suppliers ──
-async function loadSuppliers() {
-  const el = document.getElementById('supplier-list');
-  try {
-    const r = await API.get('/api/v1/suppliers?limit=50');
-    if (!r.success||!r.data.length) { el.innerHTML = '<div class="empty">暂无供应商</div>'; return; }
-    el.innerHTML = r.data.map(s => {
-      let cats = [];
-      try { cats = JSON.parse(s.categories); } catch(_){}
-      return `<div class="card"><div class="row between"><span class="title">${esc(s.name)}</span><span class="meta">${esc(s.contact_person||'')}</span></div><div class="meta">${esc(s.phone||'')} ${esc(s.email||'')}</div>${cats.length?`<div class="meta">${cats.join(' · ')}</div>`:''}</div>`;
-    }).join('');
-  } catch(e) { el.innerHTML = '<div class="empty">加载失败</div>'; }
+function resetAll() {
+  currentRfqId = null; currentItems = [];
+  document.getElementById('preview-area').classList.add('hidden');
+  document.getElementById('result-area').classList.add('hidden');
+  document.getElementById('error-area').classList.add('hidden');
+  document.getElementById('upload-area').classList.remove('hidden');
+  fileInput.value = '';
 }
 
-document.getElementById('supplier-form').addEventListener('submit', async e => {
-  e.preventDefault();
-  const name = document.getElementById('sup-name').value.trim();
-  if (!name) return;
-  const data = {
-    name,
-    contact_person: document.getElementById('sup-contact').value.trim(),
-    phone: document.getElementById('sup-phone').value.trim(),
-    email: document.getElementById('sup-email').value.trim(),
-    address: document.getElementById('sup-address').value.trim(),
-    categories: document.getElementById('sup-categories').value.trim().split(',').map(s=>s.trim()).filter(Boolean),
-  };
-  const r = await API.post('/api/v1/suppliers', data);
-  if (r.success) { document.getElementById('supplier-form').reset(); loadSuppliers(); }
-  else alert('失败: '+r.error);
-});
-
-// ── Util ──
 function esc(s) { return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function fmt(d) { return d?new Date(d).toLocaleDateString('zh-CN'):'-'; }
-function st(s) { const m={draft:'草稿',sent:'已发送',quoted:'已报价',closed:'已关闭'}; return m[s]||s; }
 </script>
 </body>
 </html>
