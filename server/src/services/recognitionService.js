@@ -1,3 +1,4 @@
+const { createValidationError } = require('../middleware/errorHandler');
 const RfqImage = require('../models/RfqImage');
 const RfqItem = require('../models/RfqItem');
 const { resolvePath } = require('../utils/fileHelper');
@@ -13,7 +14,7 @@ async function recognizeRfqImages(rfqId) {
   const images = await RfqImage.getByRfqId(rfqId);
 
   if (images.length === 0) {
-    throw new Error('No images found for this RFQ.');
+    throw createValidationError('请先上传图片，再触发识别。');
   }
 
   const allItems = [];

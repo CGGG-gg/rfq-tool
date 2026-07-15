@@ -1,11 +1,70 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const config = require('../config');
 const Rfq = require('../models/Rfq');
 const RfqItem = require('../models/RfqItem');
+const RfqImage = require('../models/RfqImage');
 const RfqSupplier = require('../models/RfqSupplier');
 const { parsePagination, paginatedResponse } = require('../utils/pagination');
 const { createValidationError, createNotFoundError } = require('../middleware/errorHandler');
 const { isValidUUID, isValidRfqStatus, validateRfqItems } = require('../utils/validators');
+const { generateFilename, ensureDir } = require('../utils/fileHelper');
+
+// Multer for image upload
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => { cb(null, ensureDir(config.upload.imageDir)); },
+    filename: (req, file, cb) => { cb(null, generateFilename(file.originalname)); },
+  }),
+  fileFilter: (req, file, cb) => {
+    if (config.upload.allowedMimeTypes.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid file type. Only JPEG, PNG, and WebP are allowed.'));
+  },
+  limits: { fileSize: config.upload.maxFileSize, files: 5 },
+});
+
+// ==================== RFQ Images & Recognition ====================
+
+router.post('/:id/images', upload.array('images', 5), async (req, res, next) => {
+  try {
+    if (!isValidUUID(req.params.id)) throw createValidationError('Invalid RFQ ID.');
+    if (!req.files || !req.files.length) throw createValidationError('No image files.');
+    const images = await Promise.all(req.files.map(f => RfqImage.create({
+      rfq_id: req.params.id, filename: f.filename, original_name: f.originalname,
+      mime_type: f.mimetype, file_size: f.size, file_path: `${config.upload.imageDir}/${f.filename}`,
+    })));
+    res.status(201).json({ success: true, data: images });
+  } catch (err) { next(err); }
+});
+
+router.get('/:id/images', async (req, res, next) => {
+  try {
+    if (!isValidUUID(req.params.id)) throw createValidationError('Invalid RFQ ID.');
+    res.json({ success: true, data: await RfqImage.getByRfqId(req.params.id) });
+  } catch (err) { next(err); }
+});
+
+router.delete('/:id/images/:imageId', async (req, res, next) => {
+  try {
+    if (!isValidUUID(req.params.imageId)) throw createValidationError('Invalid image ID.');
+    const image = await RfqImage.delete(req.params.imageId);
+    if (!image) throw createNotFoundError('Image not found.');
+    const { deleteFile } = require('../utils/fileHelper');
+    deleteFile(image.file_path);
+    res.json({ success: true, message: 'Image deleted.' });
+  } catch (err) { next(err); }
+});
+
+router.post('/:id/recognize', async (req, res, next) => {
+  try {
+    if (!isValidUUID(req.params.id)) throw createValidationError('Invalid RFQ ID.');
+    const recognitionService = require('../services/recognitionService');
+    const result = await recognitionService.recognizeRfqImages(req.params.id);
+    res.json({ success: true, data: result });
+  } catch (err) { next(err); }
+});
 
 // ==================== RFQ CRUD ====================
 
